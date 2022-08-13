@@ -1,9 +1,13 @@
+use sdl2::image::LoadTexture;
+
 mod player;
 mod vec;
 mod settings;
 mod camera;
 mod displayer;
 mod tile;
+mod util;
+mod world;
 
 use displayer::Displayer;
 use player::Player;
@@ -11,6 +15,7 @@ use settings::{FPS, WIDTH, HEIGHT};
 use vec::Vec2;
 use camera::Camera;
 use tile::Tile;
+use world::WorldManager;
 
 fn main() {
     let sdl2_ctx = sdl2::init().unwrap();
@@ -21,10 +26,17 @@ fn main() {
         HEIGHT as u32)
         .build()
         .unwrap();
-    let mut event_pump = sdl2_ctx.event_pump().unwrap();
-    let mut displayer = Displayer::new(window.into_canvas().build().unwrap());
-    let mut camera = Camera::new(Vec2{x:0.0,y:0.0});
 
+    // asset loading
+    let canvas = window.into_canvas().build().unwrap();
+    let texture_loader = canvas.texture_creator();
+    let texture_index = std::collections::HashMap::from([
+        (0, texture_loader.load_texture("./res/ex.png").unwrap()), // example image
+    ]);
+    let mut displayer = Displayer::new(canvas, texture_index);
+
+    // game entities
+    let mut camera = Camera::new(Vec2{x:0.0,y:0.0});
     let mut player = Player::new(Vec2{x:0.0,y:20.0}, Vec2{x:20.0,y:20.0});
     let mut tiles: Vec<Tile> = Vec::with_capacity(10);
     for i in 0..10 {
@@ -34,7 +46,9 @@ fn main() {
                 size: Vec2{x:20.0, y:20.0}
             });
     }
+    let world_manager = WorldManager::new();
 
+    let mut event_pump = sdl2_ctx.event_pump().unwrap();
     'main: loop {
        for event in event_pump.poll_iter() {
            // input
@@ -48,10 +62,10 @@ fn main() {
                            player.jump(20.0);
                        },
                        sdl2::keyboard::Keycode::A => {
-                           player.strafe(-2.0);
+                           player.strafe(-8.0);
                        },
                        sdl2::keyboard::Keycode::D => {
-                           player.strafe(2.0);
+                           player.strafe(8.0);
                        },
                        _ => ()
                    }
