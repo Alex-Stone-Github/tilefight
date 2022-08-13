@@ -2,6 +2,7 @@ use crate::vec::Vec2;
 use crate::camera::Camera;
 use crate::displayer::Displayer;
 
+#[derive(Clone)]
 pub struct Tile {
     pub position: Vec2<f64>,
     pub size: Vec2<f64>,
