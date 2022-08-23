@@ -32,7 +32,8 @@ impl WorldManager {
                     '#' => {
                         world_tiles.push(Tile {
                             position,
-                            size: Vec2{x:TILE_SIZE, y:TILE_SIZE}});
+                            size: Vec2{x:TILE_SIZE, y:TILE_SIZE},
+                            integrity: 100});
                         position.x += TILE_SIZE;
                     }
                     ' ' => {position.x += TILE_SIZE;}

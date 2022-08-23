@@ -6,6 +6,7 @@ use crate::displayer::Displayer;
 pub struct Tile {
     pub position: Vec2<f64>,
     pub size: Vec2<f64>,
+    pub integrity: i32,
 }
 impl Tile {
     pub fn show(&self, camera: &Camera, displayer: &mut Displayer) {

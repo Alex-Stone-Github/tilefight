@@ -8,13 +8,14 @@ mod displayer;
 mod tile;
 mod util;
 mod world;
+mod bullet;
 
 use displayer::Displayer;
-use player::Player;
 use settings::{FPS, WIDTH, HEIGHT};
 use vec::Vec2;
 use camera::Camera;
 use world::WorldManager;
+use bullet::Bullet;
 
 fn main() {
     // library setup
@@ -41,6 +42,8 @@ fn main() {
     let mut camera = Camera::new(Vec2{x:0.0,y:0.0});
     let mut world_manager = WorldManager::new();
     let mut current_world = world_manager.next().unwrap();
+    // dynamic assets
+    let mut bullets: Vec<Bullet> = Vec::new();
 
     // main loop
     let mut event_pump = sdl2_ctx.event_pump().unwrap();
@@ -55,6 +58,9 @@ fn main() {
                     match x {
                         sdl2::keyboard::Keycode::W => {
                             current_world.player.jump(20.0);
+                        },
+                        sdl2::keyboard::Keycode::S => {
+                            bullets.push(Bullet::new(current_world.player.position, Vec2{x:2.0, y:0.0}, 30));
                         },
                         // sdl2::keyboard::Keycode::A => {
                         //     current_world.player.strafe(-8.0);
@@ -74,22 +80,35 @@ fn main() {
             .pressed_scancodes()
             .filter_map(sdl2::keyboard::Keycode::from_scancode)
             .collect();
+        let mut amount = 5.0;
+        if keys.contains(&sdl2::keyboard::Keycode::LShift) {
+            amount *= 4.0;
+        }
         if keys.contains(&sdl2::keyboard::Keycode::A) {
-            current_world.player.strafe(-5.0);
+            current_world.player.strafe(-amount);
         }
         if keys.contains(&sdl2::keyboard::Keycode::D) {
-            current_world.player.strafe(5.0);
+            current_world.player.strafe(amount);
         }
 
         // process
         current_world.player.update(&current_world.tiles);
         current_world.player.update_camera(&mut camera);
+        for bullet in bullets.iter_mut() {
+            bullet.update(&mut current_world.tiles);
+        }
+        // this is part of process but filters out objects that should be destroyed
+        bullets = bullets.into_iter().filter(|x| !x.collided).collect();
+        current_world.tiles = current_world.tiles.into_iter().filter(|x| x.integrity > 0).collect();
 
         // draw
         displayer.set_background(sdl2::pixels::Color::RGB(255, 0, 0));
         current_world.player.show(&camera, &mut displayer);
         for tile in current_world.tiles.iter() {
             tile.show(&camera, &mut displayer);
+        }
+        for bullet in bullets.iter() {
+            bullet.show(&camera, &mut displayer);
         }
         displayer.present();
 
